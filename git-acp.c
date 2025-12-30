@@ -12,7 +12,7 @@ void ts_free(char **ts)
 
 	i = 0;
 	while (ts[i])
-		free(ts[i]);
+		free(ts[i++]);
 	free(ts);
 }
 
@@ -26,24 +26,32 @@ int ts_add(char **files)
 	if (kid < 0)
 		return (perror("\033[31;0mCan't fork\033[0m"), -1);
 	else if (kid == 0)
-		(execvp("git", files), perror("\033[31;0mCan't exec\033[0m"));
+	{
+		execvp("git", files);
+		perror("\033[31;0mCan't exec\033[0m");
+		exit(1);
+	}
 	else
 		return kid;
+	return 1;
 }
 
 int ts_commit()
 {
 	int r;
 	char *lain;
+	size_t cap;
 	pid_t kid;
 
 	r = 0;
+	cap = 0;
+	lain = NULL;
 	kid = fork();
 	if (kid < 0)
 		return (perror("\033[31;0mCan't fork\033[0m"), -1);
 	else if (kid == 0)
 	{
-		getline(lain, 0, stdin);
+		getline(&lain, &cap, stdin);
 		char *arg[] = {"git", "commit", "-m", lain, NULL};
 		execvp("git", arg);
 		perror("\033[31;0mCan't exec\033[0m");
@@ -57,20 +65,26 @@ int ts_commit()
 int ts_push()
 {
 	int r;
-	char **arg = {"git", "push", NULL};
+	size_t cap;
+	char *arg[] = {"git", "push", NULL};
 	char *an;
 	pid_t kid;
 
 	r = 0;
+	cap = 0;
+	an = NULL;
 	kid = fork();
 	if (kid < 0)
 		return (perror("\033[31;0mCan't fork\033[0m"), -1);
 	else if (kid == 0)
 	{
 		write(2, "You are about to push commits to the remote repository. Continue? [Y/n] : ", 74);
-		getline(an, 0, stdin);
-		if (!strcmp(an, "\n") && !strcmp(an, "y") && !strcmp(an, "Y") && !strcmp(an, "yes") && !strcmp(an, "YES"));
-			return (free(an), 1);
+		getline(&an, &cap, stdin);
+		if (!strcmp(an, "\n") && !strcmp(an, "y") && !strcmp(an, "Y") && !strcmp(an, "yes") && !strcmp(an, "YES"))
+		{
+			free(an);
+			exit(1);
+		}
 		execvp("git", arg);
 		perror("\033[31;0mCan't exec\033[0m");
 		free(an);
@@ -87,7 +101,7 @@ int ts_wait(pid_t kid)
 
 	ret = 1;
 	sta = 1;
-	ret == waitpid(kid, sta, 0);
+	ret = waitpid(kid, &sta, 0);
 	if (sta == -1)
 		perror("\033[31;0mCan't wait\033[0m");
 	else if (WIFEXITED(sta))
