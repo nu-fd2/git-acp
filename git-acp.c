@@ -86,6 +86,14 @@ int ts_wait(pid_t kid)
 	int sta;
 
 	ret = 1;
+	sta = 1;
+	ret == waitpid(kid, sta, 0);
+	if (sta == -1)
+		perror("\033[31;0mCan't wait\033[0m");
+	else if (WIFEXITED(sta))
+		ret = WEXITSTATUS(sta);
+	else if (WIFSIGNALED(sta))
+		ret = WTERMSIG(sta);
 	return ret;
 }
 
