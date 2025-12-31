@@ -18,10 +18,8 @@ void ts_free(char **ts)
 
 int ts_add(char **files)
 {
-	int r;
 	pid_t kid;
 
-	r = 0;
 	kid = fork();
 	if (kid < 0)
 		return (perror("\033[31;0mCan't fork\033[0m"), -1);
@@ -38,12 +36,10 @@ int ts_add(char **files)
 
 int ts_commit()
 {
-	int r;
 	char *lain;
 	size_t cap;
 	pid_t kid;
 
-	r = 0;
 	cap = 0;
 	lain = NULL;
 	kid = fork();
@@ -64,13 +60,11 @@ int ts_commit()
 
 int ts_push()
 {
-	int r;
 	size_t cap;
 	char *arg[] = {"git", "push", NULL};
 	char *an;
 	pid_t kid;
 
-	r = 0;
 	cap = 0;
 	an = NULL;
 	kid = fork();
@@ -113,10 +107,8 @@ int ts_wait(pid_t kid)
 
 int ts_run(int stat, char **arg)
 {
-	int r;
 	pid_t kid;
 
-	r = 1;
 	kid = -1;
 	if (stat == 0)
 		kid = ts_add(arg);
@@ -124,6 +116,8 @@ int ts_run(int stat, char **arg)
 		kid = ts_commit();
 	else
 		kid = ts_push();
+  if (kid <= 0)
+    return 1;
 	return (ts_wait(kid));
 }
 
@@ -140,7 +134,7 @@ int main(int ac, char **av)
 		return (perror("\033[31;0mNo git!!\033[0m"), 1);
 	else
 		r = 1;
-	arg = calloc(sizeof(char), ac);
+	arg = calloc(ac, sizeof(char));
 	if (!arg)
 		return (perror("\033[31;0mCan't alloc\033[0m"), 1);
 	while (i <= ac)
